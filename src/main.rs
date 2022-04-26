@@ -1,4 +1,16 @@
 use clap::Command;
+use dirs;
+use std::{
+    fs::File,
+    future::Future,
+    io::{Read, Write},
+    path::Path,
+};
+use tokio::runtime::Runtime;
+
+// CONSTANTS
+#[allow(dead_code)]
+const API_ENDPOINT: &str = "https://api.mail.tm/";
 
 fn main() {
     let matches = Command::new("mail")
@@ -8,44 +20,57 @@ fn main() {
         // subcommand
         .subcommand(Command::new("gen").about("Generate a new disposable email address"))
         .subcommand(Command::new("del").about("Generate a new disposable email address"))
-        .subcommand(Command::new("mal").about("Generate a new disposable email address"))
+        .subcommand(Command::new("mail").about("Generate a new disposable email address"))
+        .subcommand(Command::new("read").about("Generate a new disposable email address"))
         .get_matches();
 
-    if let Some(_) = matches.subcommand_matches("gen") {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(gen());
-    } else if let Some(_) = matches.subcommand_matches("del") {
-        del();
-    } else if let Some(_) = matches.subcommand_matches("mal") {
-        mal();
-    } else {
-        println!("No subcommand was used");
+    match matches.subcommand() {
+        Some(("gen", _)) => {
+            asyn_runtime(gen());
+        }
+        Some(("del", _)) => {
+            asyn_runtime(del());
+        }
+        Some(("mail", _)) => {
+            asyn_runtime(mail());
+        }
+        Some(("read", _)) => {
+            asyn_runtime(read());
+        }
+        _ => {} // Either no subcommand or one not tested for...
     }
 }
 
 async fn gen() {
-    // use reqwest to call the api and get the response
-    let client = reqwest::Client::new();
-
-    let res = client
-        .get("https://api.randomuser.me/")
-        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36")
-        .send()
-        .await.unwrap();
-
-    // parse the response
-    let body = res.text().await.unwrap();
-
-    // parse the json
-    let json: serde_json::Value = serde_json::from_str(&body).unwrap();
-
-    // get the email
-    let email = json["results"][0]["email"].as_str().unwrap();
-
-    // print the email
-    println!("{}", email);
+    // TODO:
+    // 1. first load the config file
+    // 2. if the config file is not found, means user is generating a new email address for the first time
+    // 3. if the config file is found, check if the user has already generated an email address
+    // 4. if the user has already generated an email address, then just load the email address from the config file
+    // 5. if the user has not generated an email address, then generate a new email address and save it to the config file
 }
 
-fn del() {}
+#[allow(dead_code)]
+async fn del() {}
+#[allow(dead_code)]
+async fn mail() {}
 
-fn mal() {}
+async fn read() {
+    // read the output.json file
+    let mut file = std::fs::File::open("output.json").unwrap();
+
+    // convert the file to json using serde
+    let mut contents = String::new();
+
+    file.read_to_string(&mut contents).unwrap();
+
+    let json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+
+    // pretty print the json
+    println!("{}", serde_json::to_string_pretty(&json).unwrap());
+}
+
+fn asyn_runtime(async_fn: impl Future<Output = ()>) {
+    let rt = Runtime::new().unwrap();
+    rt.block_on(async_fn);
+}
