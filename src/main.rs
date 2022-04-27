@@ -2,6 +2,7 @@ use clap::Command;
 use colored::*;
 use dirs;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::{
     fs::File,
     future::Future,
@@ -12,7 +13,7 @@ use tokio::runtime::Runtime;
 
 // CONSTANTS
 #[allow(dead_code)]
-const API_ENDPOINT: &str = "https://api.mail.tm/";
+const API_ENDPOINT: &str = "https://api.mail.tm";
 
 #[derive(Debug, Deserialize, Serialize)]
 #[allow(dead_code)]
@@ -20,6 +21,15 @@ struct Config {
     token: String,
     email_address: String,
     account_creation_date: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+struct DomainResponse {
+    #[serde(rename = "@hydra:member")]
+    domain: Vec<Domain>,
+}
+#[derive(Serialize, Deserialize, Debug)]
+struct Domain {
+    domain: String,
 }
 
 fn main() {
@@ -106,7 +116,16 @@ fn asyn_runtime(async_fn: impl Future<Output = ()>) {
 }
 #[allow(dead_code)]
 async fn genrate_new_email_address(_file: &mut File) {
-    println!("{}", "Generating new email address...".green().bold());
+    // create the client
+    let client = reqwest::Client::new();
+
+    // concatenate the api endpoint
+    let endpoint = format!("{}/domains", API_ENDPOINT);
+
+    // create the request
+    let response = client.post(endpoint).json(&json!({})).send().await.unwrap();
+
+    // deserialize the response
 }
 
 async fn create_config_file(file: &mut File) {
