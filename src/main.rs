@@ -48,6 +48,18 @@ async fn gen() {
     // 3. if the config file is found, check if the user has already generated an email address
     // 4. if the user has already generated an email address, then just load the email address from the config file
     // 5. if the user has not generated an email address, then generate a new email address and save it to the config file
+
+    // Load the config file
+    let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
+
+    // if file does not exist, then create the file
+    if !config_file_path.exists() {
+        let mut file = File::create(config_file_path).unwrap();
+        file.write_all(b"email = \"\"").unwrap();
+        println!("Created a new config file at");
+    }
+
+    println!("about to read the config file");
 }
 
 #[allow(dead_code)]
