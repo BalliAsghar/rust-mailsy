@@ -2,6 +2,7 @@ use clap::Command;
 use colored::*;
 use dirs;
 use serde::{Deserialize, Serialize};
+#[allow(unused_imports)]
 use serde_json::json;
 use std::{
     fs::File,
