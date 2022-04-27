@@ -1,7 +1,7 @@
 use clap::Command;
 use colored::*;
 use dirs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::{
     fs::File,
     future::Future,
@@ -14,7 +14,8 @@ use tokio::runtime::Runtime;
 #[allow(dead_code)]
 const API_ENDPOINT: &str = "https://api.mail.tm/";
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
+#[allow(dead_code)]
 struct Config {
     token: String,
     email_address: String,
@@ -57,29 +58,9 @@ async fn gen() {
     // if file does not exist, then create the file
     if !config_file_path.exists() {
         let mut file = File::create(config_file_path).unwrap();
-        asyn_runtime(genrate_new_email_address(&mut file));
+        create_config_file(&mut file).await;
         return;
     }
-
-    // if file exists, but the user already generated an email address, then just load the email address from the config file
-    let mut file = File::open(config_file_path).unwrap();
-
-    // read the config file and deserialize it
-    let mut contents = String::new();
-
-    file.read_to_string(&mut contents).unwrap();
-
-    let config: Config = toml::from_str(&contents).unwrap();
-
-    if !config.email_address.is_empty() {
-        println!(
-            "Email already created! {}",
-            config.email_address.green().bold()
-        );
-        return;
-    }
-
-    asyn_runtime(genrate_new_email_address(&mut file));
 }
 
 #[allow(dead_code)]
@@ -106,7 +87,21 @@ fn asyn_runtime(async_fn: impl Future<Output = ()>) {
     let rt = Runtime::new().unwrap();
     rt.block_on(async_fn);
 }
+#[allow(dead_code)]
+async fn genrate_new_email_address(_file: &mut File) {
+    println!("{}", "Generating new email address...".green().bold());
+}
 
-async fn genrate_new_email_address(file: &mut File) {
-    println!("{}", "Generating new email address".green());
+async fn create_config_file(file: &mut File) {
+    let config = Config {
+        token: "".to_string(),
+        email_address: "".to_string(),
+        account_creation_date: "".to_string(),
+    };
+    let toml = toml::to_string(&config).unwrap();
+
+    // write to file
+    file.write_all(toml.as_bytes()).unwrap();
+
+    println!("{}", "Config file created".green());
 }
