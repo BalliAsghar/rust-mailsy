@@ -1,5 +1,7 @@
 use clap::Command;
+use colored::*;
 use dirs;
+use serde::Deserialize;
 use std::{
     fs::File,
     future::Future,
@@ -11,6 +13,13 @@ use tokio::runtime::Runtime;
 // CONSTANTS
 #[allow(dead_code)]
 const API_ENDPOINT: &str = "https://api.mail.tm/";
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    token: String,
+    email_address: String,
+    account_creation_date: String,
+}
 
 fn main() {
     let matches = Command::new("mail")
@@ -42,24 +51,35 @@ fn main() {
 }
 
 async fn gen() {
-    // TODO:
-    // 1. first load the config file
-    // 2. if the config file is not found, means user is generating a new email address for the first time
-    // 3. if the config file is found, check if the user has already generated an email address
-    // 4. if the user has already generated an email address, then just load the email address from the config file
-    // 5. if the user has not generated an email address, then generate a new email address and save it to the config file
-
     // Load the config file
     let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
 
     // if file does not exist, then create the file
     if !config_file_path.exists() {
         let mut file = File::create(config_file_path).unwrap();
-        file.write_all(b"email = \"\"").unwrap();
-        println!("Created a new config file at");
+        asyn_runtime(genrate_new_email_address(&mut file));
+        return;
     }
 
-    println!("about to read the config file");
+    // if file exists, but the user already generated an email address, then just load the email address from the config file
+    let mut file = File::open(config_file_path).unwrap();
+
+    // read the config file and deserialize it
+    let mut contents = String::new();
+
+    file.read_to_string(&mut contents).unwrap();
+
+    let config: Config = toml::from_str(&contents).unwrap();
+
+    if !config.email_address.is_empty() {
+        println!(
+            "Email already created! {}",
+            config.email_address.green().bold()
+        );
+        return;
+    }
+
+    asyn_runtime(genrate_new_email_address(&mut file));
 }
 
 #[allow(dead_code)]
@@ -85,4 +105,8 @@ async fn read() {
 fn asyn_runtime(async_fn: impl Future<Output = ()>) {
     let rt = Runtime::new().unwrap();
     rt.block_on(async_fn);
+}
+
+async fn genrate_new_email_address(file: &mut File) {
+    println!("{}", "Generating new email address".green());
 }
