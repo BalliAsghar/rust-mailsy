@@ -24,12 +24,14 @@ struct Config {
 }
 #[derive(Serialize, Deserialize, Debug)]
 struct DomainResponse {
-    #[serde(rename = "@hydra:member")]
+    #[serde(rename = "hydra:member")]
     domain: Vec<Domain>,
 }
 #[derive(Serialize, Deserialize, Debug)]
 struct Domain {
     domain: String,
+    #[serde(rename = "isActive")]
+    is_active: bool,
 }
 
 fn main() {
@@ -123,9 +125,12 @@ async fn genrate_new_email_address(_file: &mut File) {
     let endpoint = format!("{}/domains", API_ENDPOINT);
 
     // create the request
-    let response = client.post(endpoint).json(&json!({})).send().await.unwrap();
+    let response = client.get(endpoint).send().await.unwrap();
 
     // deserialize the response
+    let domain_response: DomainResponse = response.json().await.unwrap();
+
+    println!("{:?}", domain_response.domain[0].domain);
 }
 
 async fn create_config_file(file: &mut File) {
