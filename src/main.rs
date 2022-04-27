@@ -57,10 +57,27 @@ async fn gen() {
 
     // if file does not exist, then create the file
     if !config_file_path.exists() {
-        let mut file = File::create(config_file_path).unwrap();
+        let mut file = File::create(&config_file_path).unwrap();
         create_config_file(&mut file).await;
+    }
+
+    // read the file
+    let mut file = File::open(&config_file_path).unwrap();
+
+    let mut contents = String::new();
+
+    file.read_to_string(&mut contents).unwrap();
+
+    // deserialize the file
+    let config: Config = toml::from_str(&contents).unwrap();
+
+    // if the token is not epmty, then we have a valid config file.
+    if !config.token.is_empty() {
+        println!("Account already created {}", config.email_address.green());
         return;
     }
+
+    genrate_new_email_address(&mut file).await;
 }
 
 #[allow(dead_code)]
