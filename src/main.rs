@@ -185,27 +185,15 @@ async fn genrate_new_email_address(_file: &mut File) {
     }
 
     // Get JWT token
-    let response = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
+    let token_request = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
         "address": email_address,
         "password": password,
     }));
 
     // send the request
-    let response = response.send().await.unwrap();
+    let token_request = token_request.send().await.unwrap();
 
-    // check if the request was not successful
-    if !response.status().is_success() {
-        // deserialize the response
-        // let auth_error: AuthError = response.json().await.unwrap();
-
-        println!("{}", &response.url().to_string().red());
-        return;
-    }
-
-    // deserialize the response
-    // let auth_response: AuthResponse = response.json().await.unwrap();
-
-    // println!("{:?}", auth_response);
+    println!("{}", token_request.text().await.unwrap());
 }
 
 async fn create_config_file(file: &mut File) {
