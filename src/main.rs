@@ -54,6 +54,12 @@ struct AuthError {
     code: u32,
     message: String,
 }
+#[derive(Serialize, Deserialize, Debug)]
+struct AccountResponse {
+    address: String,
+    #[serde(rename = "createdAt")]
+    created_at: String,
+}
 
 fn main() {
     let matches = Command::new("mail")
@@ -184,16 +190,9 @@ async fn genrate_new_email_address(_file: &mut File) {
         return;
     }
 
-    // Get JWT token
-    let token_request = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
-        "address": email_address,
-        "password": password,
-    }));
-
-    // send the request
-    let token_request = token_request.send().await.unwrap();
-
-    println!("{}", token_request.text().await.unwrap());
+    // deserialize the response
+    let auth_response: AccountResponse = response.json().await.unwrap();
+    // TODO: write the response to a file for later use
 }
 
 async fn create_config_file(file: &mut File) {
