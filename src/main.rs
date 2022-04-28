@@ -1,6 +1,7 @@
 use clap::Command;
 use colored::*;
 use dirs;
+use fastrand;
 use serde::{Deserialize, Serialize};
 #[allow(unused_imports)]
 use serde_json::json;
@@ -33,6 +34,25 @@ struct Domain {
     domain: String,
     #[serde(rename = "isActive")]
     is_active: bool,
+}
+#[derive(Serialize, Deserialize, Debug)]
+struct ErrorResponse {
+    violations: Vec<Violations>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Violations {
+    message: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+struct AuthResponse {
+    token: String,
+    id: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+struct AuthError {
+    code: u32,
+    message: String,
 }
 
 fn main() {
@@ -130,8 +150,62 @@ async fn genrate_new_email_address(_file: &mut File) {
 
     // deserialize the response
     let domain_response: DomainResponse = response.json().await.unwrap();
+    // grab the first domain
+    let domain = &domain_response.domain[0].domain;
+    // generate a random address
+    let mut email_address: String = std::iter::repeat_with(fastrand::alphanumeric)
+        .take(8)
+        .collect();
 
-    println!("{:?}", domain_response.domain[0].domain);
+    // format the email address
+    email_address = format!("{}@{}", email_address, domain);
+
+    // generate a random password
+    let password: String = std::iter::repeat_with(fastrand::alphanumeric)
+        .take(8)
+        .collect();
+
+    // create the request
+    let request = client
+        .post(format!("{}/accounts", API_ENDPOINT))
+        .json(&json!({
+            "address": email_address,
+            "password": password,
+        }));
+
+    // send the request
+    let response = request.send().await.unwrap();
+
+    // check if the request was not successful
+    if !response.status().is_success() {
+        // deserialize the response
+        let error_response: ErrorResponse = response.json().await.unwrap();
+        println!("{}", error_response.violations[1].message.red());
+        return;
+    }
+
+    // Get JWT token
+    let response = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
+        "address": email_address,
+        "password": password,
+    }));
+
+    // send the request
+    let response = response.send().await.unwrap();
+
+    // check if the request was not successful
+    if !response.status().is_success() {
+        // deserialize the response
+        // let auth_error: AuthError = response.json().await.unwrap();
+
+        println!("{}", &response.url().to_string().red());
+        return;
+    }
+
+    // deserialize the response
+    // let auth_response: AuthResponse = response.json().await.unwrap();
+
+    // println!("{:?}", auth_response);
 }
 
 async fn create_config_file(file: &mut File) {

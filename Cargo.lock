@@ -672,6 +672,7 @@ dependencies = [
  "clap",
  "colored",
  "dirs",
+ "fastrand",
  "reqwest",
  "serde",
  "serde_json",
