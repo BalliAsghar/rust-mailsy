@@ -124,5 +124,7 @@ async fn genrate_new_email_address(_file: &mut File) {
 
     // deserialize the response
     let auth_response: libs::structs::AccountResponse = response.json().await.unwrap();
-    // TODO: Solve the issue of missing field 'token'
+
+    // print the response
+    println!("{}", auth_response.address.green());
 }
