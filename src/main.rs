@@ -125,6 +125,11 @@ async fn genrate_new_email_address(_file: &mut File) {
     // deserialize the response
     let auth_response: libs::structs::AccountResponse = response.json().await.unwrap();
 
-    // print the response
-    println!("{}", auth_response.address.green());
+    // write to file
+    libs::utils::write_config_file(
+        auth_response.address,
+        auth_response.created_at,
+        "".to_string(),
+    )
+    .await;
 }
