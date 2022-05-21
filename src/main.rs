@@ -41,6 +41,9 @@ fn main() {
 }
 
 async fn gen() {
+    // Temporary Fn
+    delete_config().await;
+
     // Load the config file
     let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
 
@@ -125,11 +128,46 @@ async fn genrate_new_email_address(_file: &mut File) {
     // deserialize the response
     let auth_response: libs::structs::AccountResponse = response.json().await.unwrap();
 
+    // get token
+    let token = get_token(email_address, password).await;
+
     // write to file
-    libs::utils::write_config_file(
-        auth_response.address,
-        auth_response.created_at,
-        "".to_string(),
-    )
-    .await;
+    libs::utils::write_config_file(auth_response.address, auth_response.created_at, token).await;
+}
+
+async fn get_token(email_address: String, password: String) -> String {
+    // CRATE THE CLIENT
+    let client = reqwest::Client::new();
+
+    // build the request
+    let request = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
+        "address": email_address,
+        "password": password,
+    }));
+
+    // get response
+    let response = request.send().await.unwrap();
+
+    // check if the request was not successful
+    if !response.status().is_success() {
+        println!("{:?}", response);
+        return "".to_string();
+    }
+
+    // deserialize the response
+    let auth_response: libs::structs::TokenResponse = response.json().await.unwrap();
+
+    println!("Account created {}", auth_response.token);
+
+    return auth_response.token;
+}
+
+async fn delete_config() {
+    // Load the config file
+    let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
+
+    // if file does exits, then delete it.
+    if config_file_path.exists() {
+        std::fs::remove_file(&config_file_path).unwrap();
+    }
 }

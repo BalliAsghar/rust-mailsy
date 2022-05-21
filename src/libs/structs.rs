@@ -43,3 +43,9 @@ pub(crate) struct AccountResponse {
     #[serde(rename = "createdAt")]
     pub created_at: String,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct TokenResponse {
+    pub token: String,
+    pub id: String,
+}
