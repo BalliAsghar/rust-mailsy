@@ -59,8 +59,8 @@ async fn gen() {
     // deserialize the file
     let config: libs::structs::Config = toml::from_str(&contents).unwrap();
 
-    // if the token is not epmty, then we have a valid config file.
-    if !config.token.is_empty() {
+    // if the email is not epmty, that means the user has already generated an email address
+    if !config.email_address.is_empty() {
         println!("Account already created {}", config.email_address.green());
         return;
     }
