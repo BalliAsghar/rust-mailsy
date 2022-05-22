@@ -1,15 +1,9 @@
 use clap::Command;
 use colored::*;
 use dirs;
-use fastrand;
-#[allow(unused_imports)]
-use serde_json::json;
+use libs::utils::genrate_new_email_address;
 use std::{fs::File, io::Read, path::Path};
 mod libs;
-
-// CONSTANTS
-#[allow(dead_code)]
-const API_ENDPOINT: &str = "https://api.mail.tm";
 
 fn main() {
     let matches = Command::new("mail")
@@ -51,6 +45,8 @@ async fn gen() {
     if !config_file_path.exists() {
         let mut file = File::create(&config_file_path).unwrap();
         libs::utils::create_config_file(&mut file).await;
+        libs::utils::genrate_new_email_address(&mut file).await;
+        return;
     }
 
     // read the file
@@ -78,89 +74,6 @@ async fn del() {}
 async fn mail() {}
 
 async fn read() {}
-
-async fn genrate_new_email_address(_file: &mut File) {
-    // create the client
-    let client = reqwest::Client::new();
-
-    // concatenate the api endpoint
-    let endpoint = format!("{}/domains", API_ENDPOINT);
-
-    // create the request
-    let response = client.get(endpoint).send().await.unwrap();
-
-    // deserialize the response
-    let domain_response: libs::structs::DomainResponse = response.json().await.unwrap();
-    // grab the first domain
-    let domain = &domain_response.domain[0].domain;
-    // generate a random address
-    let mut email_address: String = std::iter::repeat_with(fastrand::alphanumeric)
-        .take(8)
-        .collect();
-
-    // format the email address
-    email_address = format!("{}@{}", email_address, domain);
-
-    // generate a random password
-    let password: String = std::iter::repeat_with(fastrand::alphanumeric)
-        .take(8)
-        .collect();
-
-    // create the request
-    let request = client
-        .post(format!("{}/accounts", API_ENDPOINT))
-        .json(&json!({
-            "address": email_address,
-            "password": password,
-        }));
-
-    // send the request
-    let response = request.send().await.unwrap();
-
-    // check if the request was not successful
-    if !response.status().is_success() {
-        // deserialize the response
-        let error_response: libs::structs::ErrorResponse = response.json().await.unwrap();
-        println!("{}", error_response.violations[1].message.red());
-        return;
-    }
-
-    // deserialize the response
-    let auth_response: libs::structs::AccountResponse = response.json().await.unwrap();
-
-    // get token
-    let token = get_token(email_address, password).await;
-
-    // write to file
-    libs::utils::write_config_file(auth_response.address, auth_response.created_at, token).await;
-}
-
-async fn get_token(email_address: String, password: String) -> String {
-    // CRATE THE CLIENT
-    let client = reqwest::Client::new();
-
-    // build the request
-    let request = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
-        "address": email_address,
-        "password": password,
-    }));
-
-    // get response
-    let response = request.send().await.unwrap();
-
-    // check if the request was not successful
-    if !response.status().is_success() {
-        println!("{:?}", response);
-        return "".to_string();
-    }
-
-    // deserialize the response
-    let auth_response: libs::structs::TokenResponse = response.json().await.unwrap();
-
-    println!("Account created {}", auth_response.token);
-
-    return auth_response.token;
-}
 
 async fn delete_config() {
     // Load the config file
