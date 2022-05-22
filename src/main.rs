@@ -1,7 +1,6 @@
 use clap::Command;
 use colored::*;
 use dirs;
-use libs::utils::genrate_new_email_address;
 use std::{fs::File, io::Read, path::Path};
 mod libs;
 
@@ -64,6 +63,9 @@ async fn gen() {
         println!("Account already created {}", config.email_address.green());
         return;
     }
+
+    // if the email is empty, then generate a new email address
+    libs::utils::genrate_new_email_address(&mut file).await;
 }
 
 #[allow(dead_code)]
