@@ -64,8 +64,6 @@ async fn gen() {
         println!("Account already created {}", config.email_address.green());
         return;
     }
-
-    genrate_new_email_address(&mut file).await;
 }
 
 #[allow(dead_code)]
