@@ -34,9 +34,6 @@ fn main() {
 }
 
 async fn gen() {
-    // Temporary Fn
-    delete_config().await;
-
     // Load the config file
     let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
 
@@ -60,12 +57,8 @@ async fn gen() {
 
     // if the email is not epmty, that means the user has already generated an email address
     if !config.email_address.is_empty() {
-        println!("Account already created {}", config.email_address.green());
-        return;
+        println!("Account already created {}", config.email_address.green())
     }
-
-    // if the email is empty, then generate a new email address
-    libs::utils::genrate_new_email_address(&mut file).await;
 }
 
 #[allow(dead_code)]
@@ -75,7 +68,7 @@ async fn mail() {}
 
 async fn read() {}
 
-async fn delete_config() {
+async fn _delete_config() {
     // Load the config file
     let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
 

@@ -24,8 +24,6 @@ pub(crate) async fn create_config_file(file: &mut File) {
 
     // write to file
     file.write_all(toml.as_bytes()).unwrap();
-
-    println!("{}", "Config file created".green());
 }
 
 pub async fn write_config_file(
@@ -46,8 +44,6 @@ pub async fn write_config_file(
     let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
     let mut file = File::create(&config_file_path).unwrap();
     file.write_all(toml.as_bytes()).unwrap();
-
-    println!("{}", "Config file updated".green());
 }
 
 pub async fn genrate_new_email_address(_file: &mut File) {
@@ -109,6 +105,8 @@ pub async fn genrate_new_email_address(_file: &mut File) {
         "".to_string(),
     )
     .await;
+
+    println!("Email address: {}", email_address.green());
 }
 
 pub async fn _get_token() -> String {
