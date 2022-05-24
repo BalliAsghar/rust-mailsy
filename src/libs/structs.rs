@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
-#[allow(dead_code)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub(crate) struct Config {
     pub token: String,
     pub email_address: String,
+    pub password: String,
     pub account_creation_date: String,
 }
 #[derive(Serialize, Deserialize, Debug)]
