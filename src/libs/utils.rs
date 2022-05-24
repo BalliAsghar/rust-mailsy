@@ -17,6 +17,7 @@ pub(crate) async fn create_config_file(file: &mut File) {
     let config = libs::structs::Config {
         token: "".to_string(),
         email_address: "".to_string(),
+        password: "".to_string(),
         account_creation_date: "".to_string(),
     };
     let toml = toml::to_string(&config).unwrap();
@@ -29,12 +30,14 @@ pub(crate) async fn create_config_file(file: &mut File) {
 
 pub async fn write_config_file(
     email_address: String,
+    password: String,
     account_creation_date: String,
     token: String,
 ) {
     let config = libs::structs::Config {
         token,
         email_address,
+        password,
         account_creation_date,
     };
     let toml = toml::to_string(&config).unwrap();
@@ -74,6 +77,8 @@ pub async fn genrate_new_email_address(_file: &mut File) {
         .take(8)
         .collect();
 
+    let password_clone = password.clone();
+
     // create the request
     let request = client
         .post(format!("{}/accounts", API_ENDPOINT))
@@ -96,36 +101,17 @@ pub async fn genrate_new_email_address(_file: &mut File) {
     // deserialize the response
     let auth_response: libs::structs::AccountResponse = response.json().await.unwrap();
 
-    // get token
-    let token = get_token(email_address, password).await;
-
     // write to file
-    libs::utils::write_config_file(auth_response.address, auth_response.created_at, token).await;
+    libs::utils::write_config_file(
+        auth_response.address,
+        password_clone,
+        auth_response.created_at,
+        "".to_string(),
+    )
+    .await;
 }
 
-pub async fn get_token(email_address: String, password: String) -> String {
-    // CRATE THE CLIENT
-    let client = reqwest::Client::new();
-
-    // build the request
-    let request = client.post(format!("{}/token", API_ENDPOINT)).json(&json!({
-        "address": email_address,
-        "password": password,
-    }));
-
-    // get response
-    let response = request.send().await.unwrap();
-
-    // check if the request was not successful
-    if !response.status().is_success() {
-        println!("{:?}", response);
-        return "".to_string();
-    }
-
-    // deserialize the response
-    let auth_response: libs::structs::TokenResponse = response.json().await.unwrap();
-
-    println!("Account created {}", auth_response.token);
-
-    return auth_response.token;
+pub async fn _get_token() -> String {
+    // TODO: implement get_token
+    return "".to_string();
 }
