@@ -57,14 +57,52 @@ async fn gen() {
 
     // if the email is not epmty, that means the user has already generated an email address
     if !config.email_address.is_empty() {
-        println!("Account already created {}", config.email_address.green())
+        println!("Account already created {}", config.email_address.green());
+        return;
     }
 }
 
 #[allow(dead_code)]
 async fn del() {}
 #[allow(dead_code)]
-async fn mail() {}
+async fn mail() {
+    // Load the config file
+    let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
+
+    // if file does not exist, print error
+    if !config_file_path.exists() {
+        println!("Account not created, Please run {}", "gen".green().bold());
+
+        return;
+    }
+
+    // deserialize the file
+    let mut file = File::open(&config_file_path).unwrap();
+
+    let mut contents = String::new();
+
+    file.read_to_string(&mut contents).unwrap();
+
+    let config: libs::structs::Config = toml::from_str(&contents).unwrap();
+
+    // if the email is empty, that means the user has not generated an email address
+    if config.email_address.is_empty() {
+        println!("Account not created, Please run {}", "gen".green().bold());
+
+        return;
+    }
+
+    // get email address and password from config file
+    let email_address = config.email_address.clone();
+    let password = config.password.clone();
+
+    // get token
+    let token = libs::utils::get_token(email_address, password).await;
+
+    println!("{}", token.green());
+
+    // TODO: fetch mails now
+}
 
 async fn read() {}
 
