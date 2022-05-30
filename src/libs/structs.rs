@@ -7,6 +7,7 @@ pub(crate) struct Config {
     pub password: String,
     pub account_creation_date: String,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct DomainResponse {
     #[serde(rename = "hydra:member")]
@@ -48,4 +49,30 @@ pub(crate) struct AccountResponse {
 pub(crate) struct TokenResponse {
     pub token: String,
     pub id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct MailsResponse {
+    #[serde(rename = "hydra:member")]
+    pub mail: Vec<Mail>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct Mail {
+    pub id: String,
+    pub from: From,
+    pub subject: String,
+    pub intro: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct From {
+    pub address: String,
+    pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct MailErrorResponse {
+    pub code: u32,
+    pub message: String,
 }
