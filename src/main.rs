@@ -64,7 +64,7 @@ async fn gen() {
 
 #[allow(dead_code)]
 async fn del() {}
-#[allow(dead_code)]
+
 async fn mail() {
     // Load the config file
     let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
@@ -106,6 +106,7 @@ async fn mail() {
     }
 
     // TODO: fetch mails now
+    println!("{}", "fetching...".green());
 }
 
 async fn read() {}
