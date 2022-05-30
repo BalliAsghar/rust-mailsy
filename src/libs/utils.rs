@@ -176,3 +176,32 @@ async fn write_token(token: String) {
 
     file.write_all(toml.as_bytes()).unwrap()
 }
+
+pub async fn get_mails(token: String) {
+    let client = reqwest::Client::new();
+
+    // concatenate the api endpoint
+    let endpoint = format!("{}/messages", API_ENDPOINT);
+
+    // create the request
+    let request = client
+        .get(endpoint)
+        .header("Authorization", format!("Bearer {}", token));
+
+    // send the request
+    let response = request.send().await.unwrap();
+
+    // check if the request was not successful
+    if !response.status().is_success() {
+        // deserialize the response
+        let error_response: libs::structs::MailErrorResponse = response.json().await.unwrap();
+        println!("{}", error_response.message.red());
+        return;
+    }
+
+    // deserialize the response
+    let mail_response: libs::structs::MailsResponse = response.json().await.unwrap();
+
+    // print the mails
+    println!("{:?}", mail_response.mail);
+}
