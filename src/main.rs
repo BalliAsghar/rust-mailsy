@@ -95,11 +95,15 @@ async fn mail() {
     // get email address and password from config file
     let email_address = config.email_address.clone();
     let password = config.password.clone();
+    let token = config.token.clone();
 
-    // get token
-    let token = libs::utils::get_token(email_address, password).await;
+    // if token is empty, then generate a new token
+    if token.is_empty() {
+        // get token
+        let token = libs::utils::get_token(email_address, password).await;
 
-    println!("{}", token.green());
+        println!("{}", token.green());
+    }
 
     // TODO: fetch mails now
 }
