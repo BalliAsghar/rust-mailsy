@@ -1,6 +1,11 @@
 use colored::Colorize;
 use serde_json::json;
-use std::{fs::File, future::Future, io::Write, path::Path};
+use std::{
+    fs::File,
+    future::Future,
+    io::{Read, Write},
+    path::Path,
+};
 use tokio::runtime::Runtime;
 
 use crate::libs;
@@ -109,7 +114,65 @@ pub async fn genrate_new_email_address(_file: &mut File) {
     println!("Email address: {}", email_address.green());
 }
 
-pub async fn _get_token() -> String {
+pub async fn get_token(email_address: String, password: String) -> String {
     // TODO: implement get_token
-    return "".to_string();
+    let client = reqwest::Client::new();
+
+    // concatenate the api endpoint
+    let endpoint = format!("{}/token", API_ENDPOINT);
+
+    // create the request
+    let request = client.post(endpoint).json(&json!({
+        "address": email_address,
+        "password": password,
+    }));
+
+    // send the request
+    let response = request.send().await.unwrap();
+
+    // check if the request was not successful
+    if !response.status().is_success() {
+        // deserialize the response
+        let error_response: libs::structs::ErrorResponse = response.json().await.unwrap();
+        println!("{}", error_response.violations[1].message.red());
+        return "".to_string();
+    }
+
+    // deserialize the response
+    let auth_response: libs::structs::TokenResponse = response.json().await.unwrap();
+
+    // clone the token
+    let token = auth_response.token.clone();
+
+    // write token to config file
+    write_token(token).await;
+
+    return auth_response.token;
+}
+
+async fn write_token(token: String) {
+    // Load the config file
+    let config_file_path = Path::new(&dirs::home_dir().unwrap()).join(".mailsy.toml");
+
+    // open the file
+    let mut file = File::open(&config_file_path).unwrap();
+
+    // read the file
+    let mut toml_string = String::new();
+
+    file.read_to_string(&mut toml_string).unwrap();
+
+    // deserialize the toml
+    let mut config: libs::structs::Config = toml::from_str(&toml_string).unwrap();
+
+    // update the token
+    config.token = token;
+
+    // serialize the toml
+    let toml = toml::to_string(&config).unwrap();
+
+    // write to file
+    let mut file = File::create(&config_file_path).unwrap();
+
+    file.write_all(toml.as_bytes()).unwrap()
 }
