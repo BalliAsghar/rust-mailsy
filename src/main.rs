@@ -105,8 +105,11 @@ async fn mail() {
         println!("{}", token.green());
     }
 
-    // TODO: fetch mails now
     println!("{}", "fetching...".green());
+
+    libs::utils::get_mails(token).await;
+
+    // TODO: add display mails as selectors and then display the selected mails
 }
 
 async fn read() {}
