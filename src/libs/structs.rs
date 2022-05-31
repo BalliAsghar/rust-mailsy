@@ -51,21 +51,23 @@ pub(crate) struct TokenResponse {
     pub id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct MailsResponse {
     #[serde(rename = "hydra:member")]
     pub mail: Vec<Mail>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct Mail {
     pub id: String,
     pub from: From,
     pub subject: String,
     pub intro: String,
+    #[serde(rename = "createdAt")]
+    pub created_at: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct From {
     pub address: String,
     pub name: String,
