@@ -1,4 +1,6 @@
+use crate::libs;
 use colored::Colorize;
+use dialoguer::{theme::ColorfulTheme, Select};
 use serde_json::json;
 use std::{
     fs::File,
@@ -7,8 +9,6 @@ use std::{
     path::Path,
 };
 use tokio::runtime::Runtime;
-
-use crate::libs;
 
 // CONSTANTS
 const API_ENDPOINT: &str = "https://api.mail.tm";
@@ -202,6 +202,27 @@ pub async fn get_mails(token: String) {
     // deserialize the response
     let mail_response: libs::structs::MailsResponse = response.json().await.unwrap();
 
-    // print the mails
-    println!("{:?}", mail_response.mail);
+    // make vector of mails
+    let mut mails = Vec::new();
+
+    // iterate over the mails
+    for mail in mail_response.mail {
+        // TODO: Format the date
+
+        let email = format!(
+            "{} - {} - {}",
+            mail.subject, mail.from.address, mail.created_at
+        );
+
+        // add the mail to the vector
+        mails.push(email)
+    }
+
+    let _selection = Select::with_theme(&ColorfulTheme::default())
+        .items(&mails)
+        .default(0)
+        .default(0)
+        .interact();
+
+    // TODO: implement get_specific_mail
 }
