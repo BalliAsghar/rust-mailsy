@@ -208,21 +208,31 @@ pub async fn get_mails(token: String) {
     // iterate over the mails
     for mail in mail_response.mail {
         // TODO: Format the date
+        let time = mail.created_at;
+
+        let date = chrono::DateTime::parse_from_rfc3339(&time).unwrap();
 
         let email = format!(
             "{} - {} - {}",
-            mail.subject, mail.from.address, mail.created_at
+            mail.subject,
+            mail.from.address,
+            date.format("%Y-%m-%d %H:%M:%S").to_string().yellow()
         );
 
         // add the mail to the vector
         mails.push(email)
     }
 
-    let _selection = Select::with_theme(&ColorfulTheme::default())
+    let selection = Select::with_theme(&ColorfulTheme::default())
         .items(&mails)
         .default(0)
         .default(0)
         .interact();
 
-    // TODO: implement get_specific_mail
+    match selection {
+        Ok(index) => {
+            println!("{}", mails[index].green());
+        }
+        Err(e) => println!("{}", e.to_string().red()),
+    }
 }
