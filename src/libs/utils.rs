@@ -200,39 +200,7 @@ pub async fn get_mails(token: String) {
     }
 
     // deserialize the response
-    let mail_response: libs::structs::MailsResponse = response.json().await.unwrap();
+    let _mail_response: libs::structs::MailsResponse = response.json().await.unwrap();
 
-    // make vector of mails
-    let mut mails = Vec::new();
-
-    // iterate over the mails
-    for mail in mail_response.mail {
-        // TODO: Format the date
-        let time = mail.created_at;
-
-        let date = chrono::DateTime::parse_from_rfc3339(&time).unwrap();
-
-        let email = format!(
-            "{} - {} - {}",
-            mail.subject,
-            mail.from.address,
-            date.format("%Y-%m-%d %H:%M:%S").to_string().yellow()
-        );
-
-        // add the mail to the vector
-        mails.push(email)
-    }
-
-    let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&mails)
-        .default(0)
-        .default(0)
-        .interact();
-
-    match selection {
-        Ok(index) => {
-            println!("{}", mails[index].green());
-        }
-        Err(e) => println!("{}", e.to_string().red()),
-    }
+    // TODO: Find a way to select the mail to open and open it in the browser
 }
